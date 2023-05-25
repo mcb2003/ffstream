@@ -1,0 +1,165 @@
+#!/bin/bash
+
+# ffstream: Stream audio to Icecast with ffmpeg
+#   Copyright (C) 2023  Michael Connor Buchan <mikey@blindcomputing.org>
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, version 3 of the License.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+set -eu
+
+# Exporting this allows config-files to check it, if they wish
+export version="0.1.0"
+user_agent="$(basename "$0")/$version"
+
+# Defaults
+audio_codec=libopus
+#config_file="/etc/$0.conf"
+content_type="audio/ogg"
+#dryrun=yes
+#icecast_description="The best station in the Lower Elements"
+#icecast_genre=hiphop
+#icecast_mount="hcr.ogg"
+icecast_password="hackme"
+icecast_port=8000
+#icecast_server="localhost"
+#icecast_title="Haven City Radio"
+#icecast_tls="yes"
+icecast_user="source"
+#icecast_url="https://lowerelements.club"
+input_format=alsa
+input_device=default
+output_format="ogg"
+
+function version() {
+    echo "$(basename $0) $version"
+    exit 0
+}
+
+function help() {
+    cat <<EOF
+Usage: $0 [option...]
+
+Stream audio to Icecast
+
+Icecast Server Options:
+  -d DESCRIPTION             Icecast stream description${icecast_description:+(default: "$icecast_description")}
+  -d GENRE                   Icecast stream genre${icecast_genre:+(default: "$icecast_genre")}
+  -m MOUNT             Icecast stream mountpoint${icecast_mount:+(default: "$icecast_mount")}
+  -p PASSWORD                Icecast password${icecast_password:+(default: "$icecast_password")}
+  -P PORT                    Icecast port${icecast_port:+(default: "$icecast_port")}
+  -s SERVER                  Icecast server${icecast_server:+(default: "$icecast_server")}
+  -t TITLE                   Icecast stream title${icecast_title:+(default: "$icecast_title")}
+  -T                         Connect using TLS (default: ${icecast_tls:-no})
+  -u USERNAME                Icecast user${icecast_user:+(default: "$icecast_user")}
+  -U URL                     Icecast stream URL${icecast_url:+(default: "$icecast_url")}
+
+General Options:
+  -c CONFIG_FILE             Location of the configuration file${config_file:+(default: "$config_file")}
+  -D                         Dryrun - print ffmpeg command and exit (default: ${dryrun:-no})
+  -h                         Print this help and exit
+  -v                         Print version and exit
+
+Report bugs to Michael Connor Buchan <mikey@blindcomputing.org>
+EOF
+}
+
+function error() {
+    echo "$0: Error: $*" >&2
+    help
+    exit 1
+}
+
+# Process command-line arguments
+while getopts "c:d:Dg:hm:p:P:s:t:Tu:U:v" arg; do
+    case "$arg" in
+        (c) config_file="$OPTARG" ;;
+        (d) icecast_description="$OPTARG" ;;
+        (D) dryrun="yes" ;;
+        (g) icecast_genre="$OPTARG" ;;
+        (h) help; exit 0 ;;
+        (m) icecast_mount="$OPTARG" ;;
+        (p) icecast_password="$OPTARG" ;;
+        (P) icecast_port="$OPTARG" ;;
+        (s) icecast_server="$OPTARG" ;;
+        (t) icecast_title="$OPTARG" ;;
+        (T) icecast_tls="yes" ;;
+        (u) icecast_user="$OPTARG" ;;
+        (U) icecast_url="$OPTARG" ;;
+        (v) version ;;
+        (\?) help; exit 1 ;;
+            (*) error "Unknown argument '$arg'"
+    esac
+done
+
+# Source a config file (if any)
+if [ "${config_file:-}" ]; then
+    source "$config_file"
+fi
+
+declare -a FFMPEG_OPTS=()
+
+# If not running interactively, hide the banner and verbose output
+test -t 1 || FFMPEG_OPTS+=(-hide_banner -loglevel error)
+
+# Check required input options
+[ "${input_format:-}" ] || error "No input format set"
+[ "${input_device:-}" ] || error "No input device set"
+[ "${audio_codec:-}" ] || error "No audio codec set"
+
+FFMPEG_OPTS+=(-f "$input_format" -i "$input_device" -acodec "$audio_codec")
+
+if [ "${content_type:-}" ]; then
+    FFMPEG_OPTS+=(-content_type "$content_type")
+fi
+
+# Icecast metadata
+if [ "${icecast_title:-}" ]; then
+    FFMPEG_OPTS+=(-ice_name "$icecast_title")
+fi
+if [ "${icecast_description:-}" ]; then
+    FFMPEG_OPTS+=(-ice_description "$icecast_description")
+fi
+if [ "${icecast_genre:-}" ]; then
+    FFMPEG_OPTS+=(-ice_genre "$icecast_genre")
+fi
+if [ "${icecast_url:-}" ]; then
+    FFMPEG_OPTS+=(-ice_url "$icecast_url")
+fi
+if [ "${icecast_tls:-}" ]; then
+    FFMPEG_OPTS+=(-tls true)
+fi
+
+# Set the user agent
+FFMPEG_OPTS+=(-user_agent "$user_agent")
+
+if [ "${output_format:-}" ]; then
+    FFMPEG_OPTS+=(-f "$output_format")
+fi
+
+# Check required icecast options
+[ "${icecast_server:-}" ] || error "No icecast server set"
+[ "${icecast_port:-}" ] || error "No icecast port set"
+[ "${icecast_user:-}" ] || error "No icecast username set"
+[ "${icecast_password:-}" ] || error "No icecast password set"
+[ "${icecast_mount:-}" ] || error "No icecast mount set"
+
+# Construct the output URL
+FFMPEG_OPTS+=("icecast://${icecast_user}:${icecast_password}@${icecast_server}:${icecast_port}/${icecast_mount}")
+
+if [ "${dryrun:-}" ]; then
+    echo -n "ffmpeg "
+    printf "%q " "${FFMPEG_OPTS[@]}"
+    exit 0
+fi
+
+ffmpeg "${FFMPEG_OPTS[@]}"
