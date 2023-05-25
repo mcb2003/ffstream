@@ -17,13 +17,14 @@
 
 set -eu
 
+prog_name="$(basename "$0")"
 # Exporting this allows config-files to check it, if they wish
 export version="0.1.0"
-user_agent="$(basename "$0")/$version"
+user_agent="$prog_name/$version"
 
 # Defaults
 audio_codec=libopus
-#config_file="/etc/$0.conf"
+#config_file="/etc/${prog_name}.conf"
 content_type="audio/ogg"
 #dryrun=yes
 #icecast_description="The best station in the Lower Elements"
@@ -41,13 +42,13 @@ input_device=default
 output_format="ogg"
 
 function version() {
-    echo "$(basename $0) $version"
+    echo "$prog_name $version"
     exit 0
 }
 
 function help() {
     cat <<EOF
-Usage: $0 [option...]
+Usage: $prog_name [option...]
 
 Stream audio to Icecast
 
@@ -74,7 +75,7 @@ EOF
 }
 
 function error() {
-    echo "$0: Error: $*" >&2
+    echo ": Error: $*" >&2
     help
     exit 1
 }
