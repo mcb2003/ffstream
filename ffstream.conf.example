@@ -1,0 +1,16 @@
+icecast_server="localhost"
+icecast_port=8000
+icecast_user="source"
+icecast_password="hackme"
+
+icecast_mount="stream.ogg"
+icecast_title="FFStream"
+icecast_description="Powered by ffstream"
+icecast_genre="various"
+
+audio_codec="libopus"
+output_format="ogg"
+content_type="audio/ogg"
+
+input_format="alsa"
+input_device="default"
