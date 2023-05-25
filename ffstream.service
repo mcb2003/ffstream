@@ -1,0 +1,10 @@
+[Unit]
+Description=Stream audio to Icecast with ffmpeg
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ffstream -c /etc/ffstream.conf
+
+[Install]
+WantedBy=multi-user.target
