@@ -5,6 +5,8 @@ After=network-online.target
 [Service]
 Type=simple
 ExecStart=/usr/local/bin/ffstream -c /etc/ffstream.conf
+#user=ffstream
+Group=audio
 
 [Install]
 WantedBy=multi-user.target
