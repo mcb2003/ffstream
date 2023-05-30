@@ -76,7 +76,7 @@ EOF
 }
 
 function error() {
-    echo ": Error: $*" >&2
+    echo "$prog_name: Error: $*" >&2
     help
     exit 1
 }
