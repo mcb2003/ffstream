@@ -8,9 +8,19 @@ icecast_title="FFStream"
 icecast_description="Powered by ffstream"
 icecast_genre="various"
 
+# Use libopus (recommended for best quality)
 audio_codec="libopus"
 output_format="ogg"
 content_type="audio/ogg"
+
+# Example of using an MP3 encoder
+audio_codec="libmp3lame"
+output_format="mp3"
+# This is a bash array, you surround it with brackets, and use the same quoting rules as arguments in your shell
+# -b:a sets a constant bitrate, but variable bitrates are more efficient
+# See <https://trac.ffmpeg.org/wiki/Encode/HighQualityAudio>
+output_extra_opts=(-b:a 320k)
+content_type="audio/mp3"
 
 input_format="alsa"
 input_device="default"

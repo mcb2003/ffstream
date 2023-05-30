@@ -40,6 +40,7 @@ icecast_user="source"
 input_format=alsa
 input_device=default
 output_format="ogg"
+declare -a output_extra_opts=()
 
 function version() {
     echo "$prog_name $version"
@@ -142,6 +143,9 @@ fi
 
 # Set the user agent
 FFMPEG_OPTS+=(-user_agent "$user_agent")
+
+# Set extra output options
+FFMPEG_OPTS+=("${output_extra_opts[@]}")
 
 if [ "${output_format:-}" ]; then
     FFMPEG_OPTS+=(-f "$output_format")
