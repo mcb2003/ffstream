@@ -19,7 +19,7 @@ set -eu
 
 prog_name="$(basename "$0")"
 # Exporting this allows config-files to check it, if they wish
-export version="0.1.0"
+export version="0.1.1"
 user_agent="$prog_name/$version"
 
 # Defaults
