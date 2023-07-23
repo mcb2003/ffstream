@@ -1,10 +1,10 @@
 #!/bin/sh
 
-prefix="/usr/local"
-bindir="${prefix}/bin"
-datadir="${prefix}/share"
-sysconfdir="/etc"
+PREFIX="${PREFIX:-/usr/local}"
+BINDIR="${BINDIR:-${PREFIX}/bin}"
+DATADIR="${DATADIR:-${PREFIX}/share}"
+SYSCONFDIR="${SYSCONFDIR:-/etc}"
 
-install -Dm 755 ffstream "${bindir}/ffstream"
-install -Dm 644 ffstream.service "${sysconfdir}/systemd/system/ffstream.service"
-install -Dm 644 ffstream.conf.example "${datadir}/ffstream/ffstream.conf.example"
+install -Dm 755 ffstream "${BINDIR}/ffstream"
+install -Dm 644 ffstream.service "${SYSCONFDIR}/systemd/system/ffstream.service"
+install -Dm 644 ffstream.conf.example "${DATADIR}/ffstream/ffstream.conf.example"
