@@ -28,14 +28,10 @@ audio_codec=libopus
 content_type="audio/ogg"
 #dryrun=yes
 #icecast_description="The best station in the Lower Elements"
+icecast_endpoint="icecast://source:hackme@localhost:8000/stream.ogg"
 #icecast_genre=hiphop
-#icecast_mount="hcr.ogg"
-icecast_password="hackme"
-icecast_port=8000
-#icecast_server="localhost"
 #icecast_title="Haven City Radio"
 #icecast_tls="yes"
-icecast_user="source"
 #icecast_url="https://lowerelements.club"
 input_format=alsa
 input_device=default
@@ -55,14 +51,10 @@ Stream audio to Icecast
 
 Icecast Server Options:
   -d DESCRIPTION             Icecast stream description${icecast_description:+(default: "$icecast_description")}
+  -e ENDPOINT                Icecast endpoint URL${icecast_endpoint:+(default: "$icecast_endpoint")}
   -d GENRE                   Icecast stream genre${icecast_genre:+(default: "$icecast_genre")}
-  -m MOUNT             Icecast stream mountpoint${icecast_mount:+(default: "$icecast_mount")}
-  -p PASSWORD                Icecast password${icecast_password:+(default: "$icecast_password")}
-  -P PORT                    Icecast port${icecast_port:+(default: "$icecast_port")}
-  -s SERVER                  Icecast server${icecast_server:+(default: "$icecast_server")}
   -t TITLE                   Icecast stream title${icecast_title:+(default: "$icecast_title")}
   -T                         Connect using TLS (default: ${icecast_tls:-no})
-  -u USERNAME                Icecast user${icecast_user:+(default: "$icecast_user")}
   -U URL                     Icecast stream URL${icecast_url:+(default: "$icecast_url")}
 
 General Options:
@@ -82,21 +74,17 @@ function error() {
 }
 
 # Process command-line arguments
-while getopts "c:d:Dg:hm:p:P:s:t:Tu:U:v" arg; do
+while getopts "c:d:De:g:ht:Tu:v" arg; do
     case "$arg" in
         (c) config_file="$OPTARG" ;;
         (d) icecast_description="$OPTARG" ;;
         (D) dryrun="yes" ;;
+        (e) icecast_endpoint="$OPTARG" ;;
         (g) icecast_genre="$OPTARG" ;;
         (h) help; exit 0 ;;
-        (m) icecast_mount="$OPTARG" ;;
-        (p) icecast_password="$OPTARG" ;;
-        (P) icecast_port="$OPTARG" ;;
-        (s) icecast_server="$OPTARG" ;;
         (t) icecast_title="$OPTARG" ;;
         (T) icecast_tls="yes" ;;
-        (u) icecast_user="$OPTARG" ;;
-        (U) icecast_url="$OPTARG" ;;
+        (u) icecast_url="$OPTARG" ;;
         (v) version ;;
         (\?) help; exit 1 ;;
             (*) error "Unknown argument '$arg'"
@@ -152,14 +140,10 @@ if [ "${output_format:-}" ]; then
 fi
 
 # Check required icecast options
-[ "${icecast_server:-}" ] || error "No icecast server set"
-[ "${icecast_port:-}" ] || error "No icecast port set"
-[ "${icecast_user:-}" ] || error "No icecast username set"
-[ "${icecast_password:-}" ] || error "No icecast password set"
-[ "${icecast_mount:-}" ] || error "No icecast mount set"
+[ "${icecast_endpoint:-}" ] || error "No icecast endpoint set"
 
 # Construct the output URL
-FFMPEG_OPTS+=("icecast://${icecast_user}:${icecast_password}@${icecast_server}:${icecast_port}/${icecast_mount}")
+FFMPEG_OPTS+=("$icecast_endpoint")
 
 if [ "${dryrun:-}" ]; then
     echo -n "ffmpeg "
