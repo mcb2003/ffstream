@@ -164,6 +164,7 @@ FFMPEG_OPTS+=("icecast://${icecast_user}:${icecast_password}@${icecast_server}:$
 if [ "${dryrun:-}" ]; then
     echo -n "ffmpeg "
     printf "%q " "${FFMPEG_OPTS[@]}"
+    echo
     exit 0
 fi
 
