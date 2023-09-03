@@ -1,9 +1,21 @@
 [Unit]
 Description=Stream audio to Icecast with ffmpeg
 After=network-online.target
+Wants=network-online.target
+
+# If your service restarts more than StartLimitBurst times in StartLimitIntervalSec seconds, systemd will give up on trying to restart it.
+StartLimitIntervalSec=300
+StartLimitBurst=5
 
 [Service]
 Type=simple
+
+# Restart if the service dies, no matter why or how. Run always and forever. Unless it keeps failing of course
+Restart=always
+
+# Retry every RestartSec seconds
+RestartSec=5s
+
 ExecStart=/usr/local/bin/ffstream -c /etc/ffstream.conf
 #user=ffstream
 Group=audio
